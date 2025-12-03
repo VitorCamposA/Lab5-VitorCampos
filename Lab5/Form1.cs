@@ -30,8 +30,7 @@ namespace Lab5
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            //call the function
-
+            ClearStats();
         }
 
         private void btnRollDice_Click(object sender, EventArgs e)
@@ -82,6 +81,17 @@ namespace Lab5
         *  Return: nothing
         *  Reset nud to minimum value, chkbox unselected, 
         *  clear labels and listbox */
+        private void ClearStats()
+        {
+            nudNumber.Value = nudNumber.Minimum;
+            chkSeed.Checked = false;
+
+            lblAverage.Text = "";
+            lblPass.Text = "";
+            lblFail.Text = "";
+
+            lstMarks.Items.Clear();
+        }
 
 
         /* Name: RollDice
@@ -107,7 +117,6 @@ namespace Lab5
         *        11 = Yo-leven
         *        12 = Boxcars
         * Anything else = No special name*/
-
         private string GetName(int total)
         {
             string name;
@@ -145,40 +154,87 @@ namespace Lab5
 
         private void btnSwapNumbers_Click(object sender, EventArgs e)
         {
-            //call ftn DataPresent twice sending string returning boolean
+            bool has1 = DataPresent(lblDice1.Text);
+            bool has2 = DataPresent(lblDice2.Text);
 
-            //if data present in both labels, call SwapData sending both strings
+            if (!has1 || !has2)
+            {
+                MessageBox.Show("Both numbers must be present.");
+                return;
+            }
 
-            //put data back into labels
+            string a = lblDice1.Text;
+            string b = lblDice2.Text;
 
-            //if data not present in either label display error msg
+            SwapData(ref a, ref b);
+
+            lblDice1.Text = a;
+            lblDice2.Text = b;
         }
 
         /* Name: DataPresent
         * Sent: string
         * Return: bool (true if data, false if not) 
         * See if string is empty or not*/
+        private bool DataPresent(string value)
+        {
+            return value.Trim() != "";
+        }
 
 
         /* Name: SwapData
         * Sent: 2 strings
         * Return: none 
         * Swaps the memory locations of two strings*/
+        private void SwapData(ref string a, ref string b)
+        {
+            string temp = a;
+            a = b;
+            b = temp;
+        }
 
         private void btnGenerate_Click(object sender, EventArgs e)
         {
-            //declare variables and array
+            int size = (int) nudNumber.Value;
+            int[] marks = new int[size];
 
-            //check if seed value
+            if (chkSeed.Checked)
+                rand = new Random(1000);
 
-            //fill array using random number
+            lstMarks.Items.Clear();
 
-            //call CalcStats sending and returning data
+            int i = 0;
+            while (i < size)
+            {
+                marks[i] = rand.Next(40, 101);
+                lstMarks.Items.Add(marks[i]);
+                i++;
+            }
 
-            //display data sent back in labels - average, pass and fail
-            // Format average always showing 2 decimal places 
+            int pass, fail;
+            double avg = CalcStats(marks, out pass, out fail);
 
-        } // end Generate 
+            lblAverage.Text = avg.ToString("F2");
+            lblPass.Text = pass.ToString();
+            lblFail.Text = fail.ToString();
+
+        }
+
+        private void chkSeed_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkSeed.Checked)
+            {
+                DialogResult result = MessageBox.Show(
+                    "Use seed value 1000?",
+                    "Seed",
+                    MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.No)
+                {
+                    chkSeed.Checked = false;
+                }
+            }
+        }
 
 
         /* Name: CalcStats
@@ -188,5 +244,24 @@ namespace Lab5
         * Passmark is 60%
         * Calculate average and count how many marks pass and fail
         * The pass and fail values must also get returned for display*/
+        private double CalcStats(int[] arr, out int pass, out int fail)
+        {
+            pass = 0;
+            fail = 0;
+
+            double sum = 0;
+
+            foreach (int mark in arr)
+            {
+                sum += mark;
+
+                if (mark >= 60)
+                    pass++;
+                else
+                    fail++;
+            }
+
+            return sum / arr.Length;
+        }
     }
 }
